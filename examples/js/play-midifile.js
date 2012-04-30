@@ -104,7 +104,8 @@ window.addEventListener('load', function() {
         //create a MIDI file chooser
         midiBridge.createMIDIFileChooser(chooseFile, uploadUrl, sequencer, function(args){
             if(args.fileName === undefined){
-                lastMessage.innerHTML = args;
+                info.style.color = "#f00";
+                info.innerHTML = args;
                 return;
             }
             

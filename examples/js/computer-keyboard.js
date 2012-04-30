@@ -16,7 +16,7 @@ window.addEventListener('load', function() {
 
     if(midiBridge.userAgent === "msie8/win"){
         //midiBridge.wrapElement(document);
-        document.body.innerHTML = "This example has no support for Internet Explorer 8";
+        document.body.innerHTML = "This example has not yet support for Internet Explorer 8";
         return;
     }
 

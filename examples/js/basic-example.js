@@ -6,10 +6,11 @@
  * 
  *  example that show the most basic way of using MIDIAccess; it connects the first MIDI input to the first MIDI output
  *  
- *  if the first MIDI input is a keyboard and the firt MIDI output is a synthesizer, or is connected to a synthesizer,
+ *  
+ *  if the first MIDI input is a keyboard and the first MIDI output is a synthesizer, or is connected to a synthesizer,
  *  you should be able to hear what you play on your keyboard.
  *  
- *  if not, try the setup-connections example
+ *  if you have a different MIDI setup, try the setup-connections example
  * 
  *  dependecies:
  *  - MIDIBridge.js
@@ -24,14 +25,22 @@ window.addEventListener('load', function() {
     midiBridge.init(function(MIDIAccess){
         
         var input = MIDIAccess.getInput(MIDIAccess.enumerateInputs()[0]);
-        devices.innerHTML += "<div class='device'><span class='device-type'>input: </span><span class='device-name'>" + input.deviceName + "</span></div>";        
-            
-        var output = MIDIAccess.getOutput(MIDIAccess.enumerateOutputs()[0]);
-        devices.innerHTML += "<div class='device'><span class='device-type'>output: </span><span class='device-name'>" + output.deviceName + "</span></div>";                                   
+        var output = MIDIAccess.getOutput(MIDIAccess.enumerateOutputs()[0]);               
         
-        input.addEventListener("midimessage",function(e){
-            messages.innerHTML += "<div class='message'>" + e.toString() + "</div>";
-            output.sendMIDIMessage(e);
-        });            
+        if(input){
+            devices.innerHTML += "<div class='device'><span class='device-type'>input: </span><span class='device-name'>" + input.deviceName + "</span></div>";        
+            
+            input.addEventListener("midimessage",function(e){
+                messages.innerHTML += "<div class='message'>" + e.toString() + "</div>";
+                
+                if(output){
+                    output.sendMIDIMessage(e);              
+                }
+            });            
+        }
+        
+        if(output){
+            devices.innerHTML += "<div class='device'><span class='device-type'>output: </span><span class='device-name'>" + output.deviceName + "</span></div>";                                   
+        }
     });           
 });
