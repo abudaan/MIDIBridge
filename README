@@ -23,6 +23,13 @@ The basic example shows a basic usage of MIDIAccess, you can use this as a start
 The other examples are a bit more advanced, these examples also use MIDIBridge plugins. I have provided 3 plugins that makes it easier to develop your own projects and keeping your code as clean as possible.
 
 
+You can check all examples online:
+http://abumarkub.net/midibridge/example/basic-example.html
+http://abumarkub.net/midibridge/example/setup-connections.html
+http://abumarkub.net/midibridge/example/computer-keyboard.html
+http://abumarkub.net/midibridge/example/play-midifile.html
+
+
 The documentation is in progress. See: https://github.com/abudaan/MIDIBridge/wiki
 
 
