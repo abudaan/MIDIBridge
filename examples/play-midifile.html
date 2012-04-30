@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+    <head>
+        <title>midi bridge</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script type="text/javascript" src="lib/MIDIBridge.js"></script>     
+        <script type="text/javascript" src="lib/MIDIFileChooser.js"></script>     
+        <script type="text/javascript" src="lib/MIDIDeviceSelector.js"></script>     
+        <script type="text/javascript" src="lib/MIDIProgramSelector.js"></script>     
+        <script type="text/javascript" src="lib/Slider.js"></script>     
+        <script type="text/javascript" src="js/play-midifile.js"></script>
+        <link rel="stylesheet" media="screen" href="css/reset.css"/>
+        <link rel="stylesheet" media="screen" href="css/midibridge.css"/>
+    </head>
+    <body>
+        <div id="content">
+            <input id="choose-file" type="file" />
+            
+            <!-- buttons for controlling the playback -->
+            <div id="controls">
+                <div id="btn-play" class="button">PLAY</div>
+                <div id="btn-pause" class="button">PAUSE</div>
+                <div id="btn-stop" class="button">STOP</div>
+            </div>
+            
+            <!-- dropdown menu for selecting a MIDI output -->
+            <select id="outputs"></select>
+
+            <!-- dropdown menu for selecting a program (instrument) -->
+            <select id="programs"></select>
+            
+            <!-- last incoming MIDI message gets displayed here -->
+            <div id="last-message"></div>
+            
+            <!-- song position slider -->
+            <div id="position" class="slider">
+                <div class="thumb">
+                    <div class="label"></div>
+                </div>
+            </div>
+            
+            <!-- displays the MIDI file that has been chosen by the file chooser -->
+            <div id="info">no MIDI file loaded</div>
+        </div>
+    </body>
+</html>

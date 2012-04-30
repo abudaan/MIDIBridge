@@ -1,0 +1,168 @@
+html{
+    font-family: Arial, Verdana, sans-serif;
+    font-size: 14px;
+    line-height: 1.1em;
+}
+#content{
+    width:700px;
+    margin: 0 auto;
+}
+h1{
+    font-size:15px;
+}
+#info{
+    margin: 10px 3px 0px 3px;
+    width:500px;
+    float:left;
+}
+#dropbox{
+    width:500px;
+    height:120px;
+    line-height: 120px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: bold;
+    border: 1px dotted #333;
+    margin: 10px 0px;
+}
+#controls{
+    margin:10px 0px;
+    height:20px;
+}
+#console, #messages, #last-message{
+    background-color: #222;
+    font-family: Consolas, Courier, Monaco, monospace;
+    font-size: 12px;
+    color: #fff;
+    border:solid 1px #000;
+    padding: 4px;
+    margin: 2px 0px 2px 0px;
+    width:492px;
+    height:375px;
+    line-height:25px;
+    overflow: auto;
+    clear:left;
+}
+#last-message{
+    height:30px;
+    margin:30px 0px;
+}
+#console div{
+
+}
+.button{
+    float: left;
+    border: 1px solid #333;
+    padding:2px;
+    margin: 0px 4px;
+    cursor: pointer;
+}
+.button:hover{
+    background-color: #fff;
+}
+.label{
+    font-size: 13px;
+    font-weight: bold;
+}
+.value{
+    font-size: 13px;
+    background-color: #fff;
+    padding:2px;
+}
+select{
+    width:250px;
+    float:left;
+    margin:3px 0px;
+}
+.slider{
+    border: #00A0B8 solid 1px;
+    border-radius: 3px;
+    background-color: white;
+    float:left;
+    /*margin-left: 20px;*/
+}
+
+.slider-label{
+    margin: -7px 13px 0px 10px;
+    font-family: Verdana,Arial,_sans;
+    font-size: 12px;
+    color: #333333;
+    float:left;
+}
+
+.thumb{
+    background-image: url('../img/balloon.png');
+    background-repeat: no-repeat;
+    position:relative;
+    width:34px;
+    height:28px;
+    margin-left: -17px;
+    text-align: center;
+}
+
+.thumb .label{
+    padding-top: 4px;
+    font-family: monospace;
+    color: #333333;
+    font-size: 13px;
+}
+.device{
+    line-height: 1.1em;
+}
+.device-type{
+    font-family: monospace;
+    font-size: 12px;
+    width:70px;
+    color:#0033ff;
+}
+.device-name{
+
+}
+#messages{
+    margin:10px 0px;
+    padding:4px;
+    line-height: 1.5em;
+    border: 1px solid #333;
+    width:500px;
+}
+#help-message{
+    line-height: 1.5em;
+}
+.message{
+    line-height: 1.3em;
+}
+.midievent-console{
+    background-color: #000;
+    font-family: consolas, monospace;
+    font-size: 12px;
+    color: #fff;
+    padding:4px;
+    width:1000px;
+}
+.midimessage{
+    /*    width:980px;*/
+    /*    height:20px;*/
+    /*    float:left;*/
+    clear:both;
+}
+.midimessage-segment,.midimessage-segment-small{
+    width:150px;
+    float:left;
+    color:#fff000;
+    /*    margin: 0px 5px;*/
+}
+.midimessage-segment-small{
+    width:70px;
+}
+.midimessage-segment:last-child{
+    float:right;
+}
+.midimessage-bold{
+    font-weight: bold;
+    color:#fff;
+}
+.keys{
+    font-family: Consolas, Courier, Monaco, monospace;
+    font-size:14px;
+    color:#00d
+}
