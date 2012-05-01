@@ -8,8 +8,8 @@ You can see the proposal at https://gist.github.com/1752949
 
 The only files you need to get started are:
 
+/lib/midiapplet-0.6.0.jar
 /lib/midibridge-0.6.0.min.js
-/java/midiapplet-0.6.0.jar
 
 /lib/MidiBridge.js is the non-minified version of /lib/midibridge-0.6.0.min.js
 
