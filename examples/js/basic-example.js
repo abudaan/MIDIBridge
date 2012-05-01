@@ -20,8 +20,8 @@
 window.addEventListener('load', function() {
     
     var devices = document.getElementById("devices"),
-    messages = document.getElementById("messages");    
-
+    messages = document.getElementById("messages");  
+    
     midiBridge.init(function(MIDIAccess){
         
         var input = MIDIAccess.getInput(MIDIAccess.enumerateInputs()[0]);

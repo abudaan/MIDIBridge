@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+    <head>
+        <title>midi bridge</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script type="text/javascript" src="lib/MIDIBridge.js"></script>     
+        <script type="text/javascript" src="lib/MIDIDeviceSelector.js"></script>     
+        <script type="text/javascript" src="js/random-sequence.js"></script>
+        <link rel="stylesheet" media="screen" href="css/reset.css"/>
+        <link rel="stylesheet" media="screen" href="css/midibridge.css"/>
+    </head>
+    <body>
+        <div id="content">
+            <!-- dropdown menu for selecting a MIDI output -->
+            <select id="outputs"></select>
+
+            <!-- button that starts the sequence -->
+            <input type="button" id="start" value="start" />
+
+            <!-- button that stops the sequence -->
+            <input type="button" id="stop" value="stop" />
+
+            <!-- MIDI messages get displayed here -->
+            <div id="messages">Please select a MIDI output<br/></div>
+        </div>
+    </body>
+</html>
