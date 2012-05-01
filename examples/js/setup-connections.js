@@ -38,7 +38,11 @@ window.addEventListener('load', function() {
         }
     }
 
-    midiBridge.init(function(_midiAccess){
+    midiBridge.init({
+        debug:true,//prints out some debug info
+        filterCommands:[midiBridge.PITCH_BEND,midiBridge.ACTIVE_SENSING]//these commands are filtered out -> they don't show up in the MIDI event handler
+    },
+    function(_midiAccess){
         
         var inputs,outputs;
         

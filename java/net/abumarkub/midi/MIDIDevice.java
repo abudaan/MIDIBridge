@@ -12,6 +12,7 @@ import java.applet.AppletContext;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.sound.midi.*;
+import netscape.javascript.JSObject;
 
 public class MIDIDevice implements Receiver {
 
@@ -22,6 +23,7 @@ public class MIDIDevice implements Receiver {
     private Transmitter _transmitter2;
     public MIDIDeviceInfo info;
     private AppletContext _context;
+    private JSObject _jsEventListener;
     public int id;
     public String deviceType;
     public String deviceName;
@@ -130,6 +132,32 @@ public class MIDIDevice implements Receiver {
         }
         return false;
     }
+    
+    
+    //@TODO: currently you can connect only 1 eventlistener!
+    public boolean addEventListener(String id, JSObject eventListener) {
+        
+        _jsEventListener = eventListener;
+        
+        if(deviceType.equals("output")){
+            System.out.println("Can not add eventlistener to an output");
+            return false;
+        }
+        
+        if (id.equals("midimessage")) {
+            if (_transmitter == null) {
+                try {
+                    _transmitter = _device.getTransmitter();
+                } catch (MidiUnavailableException e) {
+                    System.out.println("Device " + deviceName + " could not open a transmitter " + e);
+                    return false;
+                }
+            }
+            _transmitter.setReceiver(this);
+            return true;
+        }
+        return false;
+    }
 
     public boolean setDirectOutput(MIDIDevice device) {
         
@@ -211,15 +239,45 @@ public class MIDIDevice implements Receiver {
         return true;
     }
 
+    public boolean sendMIDIMessage(int command, int channel, int data1, int data2, int timeStamp) {
+        
+        if(deviceType.equals("input")){
+            System.out.println("Can not send a MIDI message to an input!");
+            return false;
+        }
+
+        //System.out.println("sendMIDIMessage:" + message.command);
+        ShortMessage sm = new ShortMessage();
+        try {
+            sm.setMessage(command, channel, data1, data2);
+            _receiver.send(sm, timeStamp);
+        } catch (InvalidMidiDataException e) {
+            System.out.println("error sending MIDI message: " + e);
+            return false;
+        } catch (NullPointerException e) {
+            System.out.println("error sending MIDI message: " + e);
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public void send(MidiMessage message, long timeStamp) {
         //System.out.println(message.toString() + " " + _eventListener);
         if (message instanceof ShortMessage) {
+            
             ShortMessage tmp = (ShortMessage) message;
             MIDIMessage msg = new MIDIMessage(tmp, timeStamp);
-            String jsMsg = id + "," + msg.command + "," + msg.channel + "," + msg.data1 + "," + msg.data2 + "," + timeStamp + ",'" + msg.toString() + "'";
+
+            //@TODO: loop over all event listeners, check if they want to be updated via AppletContext or Live Connect, and dispatch to all
             
-            sendMessageViaContext("javascript:midiBridge.onMIDIData(" + jsMsg + ")");
+            if(1 == 2){//just a way of ignoring the AppletContext send method
+                String jsMsg = id + "," + msg.command + "," + msg.channel + "," + msg.data1 + "," + msg.data2 + "," + timeStamp + ",'" + msg.toString() + "'";            
+                sendMessageViaContext("javascript:midiBridge.onMIDIData(" + jsMsg + ")");
+            }else{//currently sending via Live Connect is preferred
+                Object[] args = {msg};     
+                _jsEventListener.call("listener",args);
+            }
         }
     }
 

@@ -33,7 +33,7 @@ public class MIDIApplet extends Applet{
         int currentVersion = getVersionAsNumber(javaVersion);
         int requiredVersion = getVersionAsNumber(getParameter("minJavaVersion"));
         _match = currentVersion >= requiredVersion;
-        System.out.println("[init] MIDIBridge 0.6.2 Java Version OK: " + _match);
+        System.out.println("[init] MIDIBridge 0.6.3 Java Version OK: " + _match);
     }
 
     @Override

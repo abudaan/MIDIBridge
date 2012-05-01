@@ -8,10 +8,10 @@ You can read the proposal at https://gist.github.com/1752949
 
 The only files you need to get started are:
 
-/lib/midiapplet-0.6.2.jar
-/lib/midibridge-0.6.2.min.js
+/lib/midiapplet-0.6.3.jar
+/lib/midibridge-0.6.3.min.js
 
-/lib/MidiBridge.js is the non-minified version of /lib/midibridge-0.6.2.min.js
+/lib/MidiBridge.js is the non-minified version of /lib/midibridge-0.6.3.min.js
 
 
 The MIDIBridge is written in native Javascript, so you can use it conflict-free with any Javascript framework. If you use a framework, you have to embed it in your HTML file before you embed the MIDIBridge. 

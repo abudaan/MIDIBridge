@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.sound.midi.*;
+import netscape.javascript.JSObject;
 import org.apache.commons.codec.binary.Base64;
 
 public class MIDISequencer implements Receiver, MetaEventListener {
@@ -25,6 +26,8 @@ public class MIDISequencer implements Receiver, MetaEventListener {
     private Transmitter _transmitter2;
     private Receiver _receiver;
     private AppletContext _context;
+    private JSObject _jsMIDIEventListener;
+    private JSObject _jsMetaEventListener;
     private boolean _hasMetaEventListener;
 
     public MIDISequencer(AppletContext context) {
@@ -69,6 +72,31 @@ public class MIDISequencer implements Receiver, MetaEventListener {
             if (!_hasMetaEventListener) {
                 _hasMetaEventListener = _sequencer.addMetaEventListener(this);
             }
+            return true;
+        }
+        return false;
+    }
+    
+    //@TODO: currently you can connect only 1 eventlistener!
+    public boolean addEventListener(String id, JSObject eventListener) {
+        
+        if (id.equals("midimessage")) {
+            if (_transmitter == null) {
+                try {
+                    _transmitter = _sequencer.getTransmitter();
+                } catch (MidiUnavailableException e) {
+                    System.out.println("Sequencer could not open a transmitter " + e);
+                    return false;
+                }
+            }
+            _jsMIDIEventListener = eventListener;
+            _transmitter.setReceiver(this);
+            return true;
+        } else if (id.equals("metamessage")) {
+            if (!_hasMetaEventListener) {
+                _hasMetaEventListener = _sequencer.addMetaEventListener(this);
+            }
+            _jsMetaEventListener = eventListener;
             return true;
         }
         return false;
@@ -154,27 +182,42 @@ public class MIDISequencer implements Receiver, MetaEventListener {
         //System.out.println("MidiMessage: " + message + " " + timeStamp);
         timeStamp = _sequencer.getMicrosecondPosition();
         if (message instanceof ShortMessage) {
+            
             ShortMessage tmp = (ShortMessage) message;
             MIDIMessage msg = new MIDIMessage(tmp, timeStamp);
-            String jsMsg = msg.command + "," + msg.channel + "," + msg.data1 + "," + msg.data2 + "," + timeStamp + ",'" + msg.toString() + "'";
+
+            //@TODO: loop over all event listeners, check if they want to be updated via AppletContext or Live Connect, and dispatch to all
             
-            sendMessageViaContext("javascript:midiBridge.sequencerMIDIData(" + jsMsg + ")");
+            if(1 == 2){//just a way of ignoring the AppletContext send method
+                String jsMsg = msg.command + "," + msg.channel + "," + msg.data1 + "," + msg.data2 + "," + timeStamp + ",'" + msg.toString() + "'";            
+                sendMessageViaContext("javascript:midiBridge.onSequencerMIDIData(" + jsMsg + ")");
+            }else{//currently sending via Live Connect is preferred
+                Object[] args = {msg};     
+                _jsMIDIEventListener.call("listener",args);
+            }
         }
     }
-
+    
+    //@TODO: loop over all event listeners, check if they want to be updated via AppletContext or Live Connect, and dispatch to all
     public void meta(MetaMessage meta) {
-        StringBuilder jsMsg = new StringBuilder();
-        jsMsg.append(meta.getType());
-        jsMsg.append(",");
-        jsMsg.append(meta.getStatus());
-        
-        byte[] message = meta.getMessage();
-        for(int i = 0, maxi = message.length; i < maxi; i++){
+        if(1 == 2){//just a way of ignoring the AppletContext send method
+            StringBuilder jsMsg = new StringBuilder();
+            jsMsg.append(meta.getType());
             jsMsg.append(",");
-            jsMsg.append(message[i]);
+            jsMsg.append(meta.getStatus());
+
+            byte[] message = meta.getMessage();
+            for(int i = 0, maxi = message.length; i < maxi; i++){
+                jsMsg.append(",");
+                jsMsg.append(message[i]);
+            }
+
+            sendMessageViaContext("javascript:midiBridge.sequencerMetaData(" + jsMsg.toString() + ")");            
+        }else{//currently sending via Live Connect is preferred
+            Object[] args = {meta};
+            _jsMetaEventListener.call("listener",args);          
         }
-        
-        sendMessageViaContext("javascript:midiBridge.sequencerMetaData(" + jsMsg.toString() + ")");
+       
     }
 
     public Sequence getSequence() {
