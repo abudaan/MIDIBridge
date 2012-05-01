@@ -60,7 +60,7 @@
         NOTE_NAMES_ENHARMONIC_FLAT : "enh-flat",
         
         //rest
-        version : "0.6.0",
+        version : "0.6.1",
         noteNameModus : "sharp",
         userAgent : ""
     },
@@ -383,14 +383,14 @@
             getSequence:function(){
                 return Sequencer.getSequence();
             },
-            addDirectConnection:function(device){
-                return Sequencer.addDirectConnection(device.getDevice());
+            setDirectOutput:function(output){
+                return Sequencer.setDirectOutput(output.getDevice());
             },
-            removeDirectConnection:function(){
-                Sequencer.removeDirectConnection();
+            removeDirectOutput:function(){
+                Sequencer.removeDirectOutput();
             },
-            hasDirectConnection:function(){
-                return Sequencer.hasDirectConnection();
+            hasDirectOutput:function(){
+                return Sequencer.hasDirectOutput();
             }
         };
         
@@ -464,6 +464,15 @@
                 getDevice:function(){
                     return device;
                 },
+                setDirectOutput:function(output){
+                    return device.setDirectOutput(output.getDevice());
+                },
+                removeDirectOutput:function(){
+                    device.removeDirectOutput();
+                },
+                hasDirectOutput:function(){
+                    return device.hasDirectOutput();
+                },
                 deviceType:device.deviceType,
                 deviceName:device.deviceName,
                 deviceManufacturer:device.deviceManufacturer,
@@ -515,6 +524,9 @@
     }
         
     midiBridge.getNoteName = function(noteNumber, mode) {
+        if(!mode){
+            mode = midiBridge.NOTE_NAMES_SHARP;
+        }
         var octave = Math.floor(((noteNumber) / 12) - 1),
         noteName = noteNames[mode][noteNumber % 12];
         return noteName + "" + octave;
@@ -545,7 +557,7 @@
         return midiStatusCodes[code];
     };
     
-    midiBridge.getNiceTime = function(microseconds)
+    midiBridge.formatMicroseconds = function(microseconds)
     {
         //console.log(microseconds);
         var r = "",     

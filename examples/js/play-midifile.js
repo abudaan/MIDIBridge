@@ -75,7 +75,7 @@ window.addEventListener('load', function() {
     
 
   
-    //add a program select dropdown menu
+    //add a program select dropdown menu and add an event listener to the change event
     midiBridge.createMIDIProgramSelector(selectProgram,function(programId){
         if(output && midiAccess){
             output.sendMIDIMessage(midiAccess.createMIDIMessage(midiBridge.PROGRAM_CHANGE, 0, programId, 0));
@@ -90,8 +90,8 @@ window.addEventListener('load', function() {
         outputs = midiAccess.enumerateOutputs();
         sequencer = midiBridge.getSequencer();
         console.log(sequencer.getTempoInBPM());
-        
-        //create dropdown menu for MIDI outputs
+         
+        //create dropdown menu for MIDI outputs and add an event listener to the change event
         midiBridge.createMIDIDeviceSelector(selectOutput,outputs,"ouput",function(deviceId){
             if(output){
                 output.close();
@@ -110,7 +110,7 @@ window.addEventListener('load', function() {
             }
             
             info.innerHTML = "<span class='label'>file:</span> <span class='value'>" + args.fileName + "</span> ";
-            info.innerHTML += "<span class='label'>length:</span><span class='value'>" + midiBridge.getNiceTime(args.microsecondLength) + "</span> ";
+            info.innerHTML += "<span class='label'>length:</span><span class='value'>" + midiBridge.formatMicroseconds(args.microsecondLength) + "</span> ";
             info.innerHTML += "<span class='label'>ticks:</span><span class='value'>" + args.tickLength + "</span> ";
             info.innerHTML += "<span class='label'>position:</span><span id='time' class='value'>0:00:000</span>";
 
@@ -125,7 +125,7 @@ window.addEventListener('load', function() {
             lastMessage.innerHTML = e.toString() + "<br/>";
             var timeStamp = parseInt(e.timeStamp);
             slider.setPercentage(((timeStamp / 1000) >> 0) / duration, false);
-            position.innerHTML = midiBridge.getNiceTime(timeStamp);
+            position.innerHTML = midiBridge.formatMicroseconds(timeStamp);
             if(output){
                 output.sendMIDIMessage(e);
             }

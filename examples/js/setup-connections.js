@@ -28,7 +28,11 @@ window.addEventListener('load', function() {
                 if(output){
                     output.sendMIDIMessage(e);
                 }
-                midiMessages.innerHTML += e.toString() + "<br/>";
+                if(e.command === midiBridge.NOTE_OFF || e.command === midiBridge.NOTE_ON){
+                    midiMessages.innerHTML += e.toString() + " NOTENAME:" + midiBridge.getNoteName(e.data1) + "<br/>";
+                }else{
+                    midiMessages.innerHTML += e.toString() + "<br/>";
+                }
                 midiMessages.scrollTop = midiMessages.scrollHeight;
             });
         }
@@ -42,7 +46,7 @@ window.addEventListener('load', function() {
         inputs = midiAccess.enumerateInputs();
         outputs = midiAccess.enumerateOutputs();
  
-        //create dropdown menu for MIDI inputs
+        //create dropdown menu for MIDI inputs and add an event listener to the change event
         midiBridge.createMIDIDeviceSelector(selectInput,inputs,"input",function(deviceId){
             if(input){
                 input.close();
@@ -51,7 +55,7 @@ window.addEventListener('load', function() {
             connectDevices();        
         });
 
-        //create dropdown menu for MIDI outputs
+        //create dropdown menu for MIDI outputs and add an event listener to the change event
         midiBridge.createMIDIDeviceSelector(selectOutput,outputs,"ouput",function(deviceId){
             if(output){
                 output.close();

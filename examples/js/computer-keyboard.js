@@ -91,7 +91,7 @@ window.addEventListener('load', function() {
         midiAccess = _midiAccess;
         outputs = midiAccess.enumerateOutputs();
 
-        //create dropdown menu for MIDI outputs
+        //create dropdown menu for MIDI outputs and add an event listener to the change event
         midiBridge.createMIDIDeviceSelector(selectOutput,outputs,"ouput",function(deviceId){
             
             if(output){

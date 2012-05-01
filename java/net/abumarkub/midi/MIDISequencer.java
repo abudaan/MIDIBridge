@@ -156,10 +156,10 @@ public class MIDISequencer implements Receiver, MetaEventListener {
     public Sequence getSequence() {
         return _sequence;
     }
-
-    public boolean addDirectConnection(MIDIDevice device) {
+    
+    public boolean setDirectOutput(MIDIDevice device) {
         
-        System.out.println("addDirectConnection:" + device);
+        System.out.println("setDirectOutput: " + device.deviceName);
 
         if (_receiver != null) {
             _receiver.close();
@@ -183,7 +183,7 @@ public class MIDISequencer implements Receiver, MetaEventListener {
         return true;
     }
     
-    public void removeDirectConnection(){
+    public void removeDirectOutput(){
         if(_transmitter2 != null){
             _transmitter2.close();
         }
@@ -194,7 +194,7 @@ public class MIDISequencer implements Receiver, MetaEventListener {
         _receiver = null;
     }
     
-    public boolean hasDirectConnection(){
+    public boolean hasDirectOutput(){
         return _receiver != null;
     }
 
@@ -250,7 +250,7 @@ public class MIDISequencer implements Receiver, MetaEventListener {
         _sequencer.setTrackMute(index, false);
     }
 
-    //to be implemented
+    //@TODO: implemented this
     public void createNewSequence() {
         //_sequence = new Sequence();
         _sequence.getMicrosecondLength();

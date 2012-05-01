@@ -6,7 +6,6 @@
  * 
  *  
  */
-
 package net.abumarkub.midi;
 
 import javax.sound.midi.*;
@@ -18,6 +17,7 @@ public class MIDIDevice implements Receiver {
     private MidiDevice.Info _deviceInfo;
     private Receiver _receiver;
     private Transmitter _transmitter;
+    private Transmitter _transmitter2;
     private JSObject _eventListener;
     public MIDIDeviceInfo info;
     public int id;
@@ -28,11 +28,11 @@ public class MIDIDevice implements Receiver {
     public String deviceDescription;
 
     public MIDIDevice(MidiDevice device, int index, String type) {
-        
+
         _device = device;
         _deviceInfo = device.getDeviceInfo();
-        
-        info = new MIDIDeviceInfo(index, type,_deviceInfo);
+
+        info = new MIDIDeviceInfo(index, type, _deviceInfo);
 
         id = index;
         deviceType = type;
@@ -40,11 +40,12 @@ public class MIDIDevice implements Receiver {
         deviceManufacturer = info.deviceManufacturer;
         deviceVersion = info.deviceVersion;
         deviceDescription = info.deviceDescription;
-        
+
         System.out.println("[" + type + "]" + info.deviceName);
 
         _receiver = null;
         _transmitter = null;
+        _transmitter2 = null;
     }
 
     @Override
@@ -101,6 +102,52 @@ public class MIDIDevice implements Receiver {
         return false;
     }
 
+    public boolean setDirectOutput(MIDIDevice device) {
+        
+        if(deviceType.equals("output")){
+            System.out.println("Can not add an output to an output!");
+            return false;
+        }
+        
+        System.out.println("setDirectOutput: " + device.deviceName);
+
+        if (_receiver != null) {
+            _receiver.close();
+        }
+
+        _receiver = device.getReceiver();
+        if (_receiver == null) {
+            return false;
+        }
+
+        if (_transmitter2 == null) {
+            try {
+                _transmitter2 = _device.getTransmitter();
+            } catch (MidiUnavailableException e) {
+                System.out.println("Device " + deviceName + " could not open a transmitter " + e);
+                return false;
+            }
+        }
+        _transmitter2.setReceiver(_receiver);
+
+        return true;
+    }
+
+    public void removeDirectOutput() {
+        if (_transmitter2 != null) {
+            _transmitter2.close();
+        }
+        if (_receiver != null) {
+            _receiver.close();
+        }
+        _transmitter2 = null;
+        _receiver = null;
+    }
+
+    public boolean hasDirectOutput() {
+        return _receiver != null;
+    }
+
     public MidiDevice getDevice() {
         return _device;
     }
@@ -131,13 +178,13 @@ public class MIDIDevice implements Receiver {
         //System.out.println(message.toString() + " " + _eventListener);
         if (message instanceof ShortMessage) {
             ShortMessage msg = (ShortMessage) message;
-            Object[] args = {new MIDIMessage(msg,timeStamp)};
+            Object[] args = {new MIDIMessage(msg, timeStamp)};
             _eventListener.call("listener", args);
         }
     }
-    
+
     @Override
-    public String toString(){
-        return info.toString();       
+    public String toString() {
+        return info.toString();
     }
 }

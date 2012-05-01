@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+    <head>
+        <title>midi bridge</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script type="text/javascript" src="lib/MIDIBridge.js"></script>     
+        <script type="text/javascript" src="lib/MIDIDeviceSelector.js"></script>     
+        <script type="text/javascript" src="js/setup-connections-direct.js"></script>
+        <link rel="stylesheet" media="screen" href="css/reset.css"/>
+        <link rel="stylesheet" media="screen" href="css/midibridge.css"/>
+    </head>
+    <body>
+        <div id="content">
+            <!-- dropdown menu for selecting a MIDI input -->
+            <select id="inputs"></select>
+
+            <!-- dropdown menu for selecting a MIDI output -->
+            <select id="outputs"></select>
+
+            <!-- incoming MIDI messages get displayed here -->
+            <div id="messages">MIDI messages:<br/></div>
+        </div>
+    </body>
+</html>
