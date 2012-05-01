@@ -8,8 +8,10 @@
  */
 package net.abumarkub.midi;
 
+import java.applet.AppletContext;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.sound.midi.*;
-import netscape.javascript.JSObject;
 
 public class MIDIDevice implements Receiver {
 
@@ -18,8 +20,8 @@ public class MIDIDevice implements Receiver {
     private Receiver _receiver;
     private Transmitter _transmitter;
     private Transmitter _transmitter2;
-    private JSObject _eventListener;
     public MIDIDeviceInfo info;
+    private AppletContext _context;
     public int id;
     public String deviceType;
     public String deviceName;
@@ -27,11 +29,12 @@ public class MIDIDevice implements Receiver {
     public String deviceVersion;
     public String deviceDescription;
 
-    public MIDIDevice(MidiDevice device, int index, String type) {
-
+    public MIDIDevice(MidiDevice device, int index, String type, AppletContext context) {
+        
         _device = device;
         _deviceInfo = device.getDeviceInfo();
-
+        _context = context;
+                
         info = new MIDIDeviceInfo(index, type, _deviceInfo);
 
         id = index;
@@ -47,6 +50,17 @@ public class MIDIDevice implements Receiver {
         _transmitter = null;
         _transmitter2 = null;
     }
+    
+    //sending messages from Java to Javascript is faster via AppletContext then via Live Connect
+    private void sendMessageViaContext(String url) {
+        try {
+            _context.showDocument(new URL(url));
+        } catch (MalformedURLException me) {
+            System.out.println(me);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
 
     @Override
     public void close() {
@@ -55,6 +69,9 @@ public class MIDIDevice implements Receiver {
         }
         if (_transmitter != null) {
             _transmitter.close();
+        }
+        if (_transmitter2 != null) {
+            _transmitter2.close();
         }
 
         if (_device.isOpen()) {
@@ -92,11 +109,23 @@ public class MIDIDevice implements Receiver {
         return true;
     }
 
-    public boolean addEventListener(String id, JSObject eventListener) {
-
-        //System.out.println("addEventListener");
+    public boolean addEventListener(String id) {
+        
+        if(deviceType.equals("output")){
+            System.out.println("Can not add eventlistener to an output");
+            return false;
+        }
+        
         if (id.equals("midimessage")) {
-            _eventListener = eventListener;
+            if (_transmitter == null) {
+                try {
+                    _transmitter = _device.getTransmitter();
+                } catch (MidiUnavailableException e) {
+                    System.out.println("Device " + deviceName + " could not open a transmitter " + e);
+                    return false;
+                }
+            }
+            _transmitter.setReceiver(this);
             return true;
         }
         return false;
@@ -160,7 +189,13 @@ public class MIDIDevice implements Receiver {
         return _transmitter;
     }
 
-    public void sendMIDIMessage(MIDIMessage message) {
+    public boolean sendMIDIMessage(MIDIMessage message) {
+        
+        if(deviceType.equals("input")){
+            System.out.println("Can not send a MIDI message to an input!");
+            return false;
+        }
+
         //System.out.println("sendMIDIMessage:" + message.command);
         ShortMessage sm = new ShortMessage();
         try {
@@ -168,18 +203,23 @@ public class MIDIDevice implements Receiver {
             _receiver.send(sm, message.timeStamp);
         } catch (InvalidMidiDataException e) {
             System.out.println("error sending MIDI message: " + e);
+            return false;
         } catch (NullPointerException e) {
             System.out.println("error sending MIDI message: " + e);
+            return false;
         }
+        return true;
     }
 
     @Override
     public void send(MidiMessage message, long timeStamp) {
         //System.out.println(message.toString() + " " + _eventListener);
         if (message instanceof ShortMessage) {
-            ShortMessage msg = (ShortMessage) message;
-            Object[] args = {new MIDIMessage(msg, timeStamp)};
-            _eventListener.call("listener", args);
+            ShortMessage tmp = (ShortMessage) message;
+            MIDIMessage msg = new MIDIMessage(tmp, timeStamp);
+            String jsMsg = id + "," + msg.command + "," + msg.channel + "," + msg.data1 + "," + msg.data2 + "," + timeStamp + ",'" + msg.toString() + "'";
+            
+            sendMessageViaContext("javascript:midiBridge.onMIDIData(" + jsMsg + ")");
         }
     }
 

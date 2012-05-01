@@ -12,23 +12,6 @@ package net.abumarkub.midi;
 
 public class MIDIData {
 
-    public static final int NOTE_OFF = 0x80;//128
-    public static final int NOTE_ON = 0x90;//144
-    public static final int POLY_PRESSURE = 0xA0;//160
-    public static final int CONTROL_CHANGE = 0xB0;//176
-    public static final int PROGRAM_CHANGE = 0xC0;//192
-    public static final int CHANNEL_PRESSURE = 0xD0;//208
-    public static final int PITCH_BEND = 0xE0;//224
-    public static final int SYSTEM_EXCLUSIVE = 0xF0;//240
-    public static final String NOTE_OFF_VERBOSE = "NOTE OFF";
-    public static final String NOTE_ON_VERBOSE = "NOTE ON";
-    public static final String POLY_PRESSURE_VERBOSE = "POLY PRESSURE";
-    public static final String CONTROL_CHANGE_VERBOSE = "CONTROL CHANGE";
-    public static final String PROGRAM_CHANGE_VERBOSE = "PROGRAM CHANGE";
-    public static final String CHANNEL_PRESSURE_VERBOSE = "CHANNEL PRESSURE";
-    public static final String PITCH_BEND_VERBOSE = "PITCH BEND";
-    public static final String SYSTEM_EXCLUSIVE_VERBOSE = "SYSTEM EXCLUSIVE";
-
     public static String getCommand(int command) {
         String description = "";
         switch (command) {

@@ -9,10 +9,12 @@
  */
 package net.abumarkub.midi;
 
+import java.applet.AppletContext;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.sound.midi.*;
-import netscape.javascript.JSObject;
 import org.apache.commons.codec.binary.Base64;
 
 public class MIDISequencer implements Receiver, MetaEventListener {
@@ -22,42 +24,57 @@ public class MIDISequencer implements Receiver, MetaEventListener {
     private Transmitter _transmitter;
     private Transmitter _transmitter2;
     private Receiver _receiver;
-    private JSObject _midiEventListener;
-    private JSObject _metaEventListener;
+    private AppletContext _context;
     private boolean _hasMetaEventListener;
 
-    public MIDISequencer() {
-                
+    public MIDISequencer(AppletContext context) {
+        _context = context;
+
         try {
             _sequencer = javax.sound.midi.MidiSystem.getSequencer(false);
 
         } catch (MidiUnavailableException e) {
             System.out.println(e);
         }
+
         _receiver = null;
         _transmitter = null;
         _transmitter2 = null;
-        _metaEventListener = null;
+    }
+    
+    //sending messages from Java to Javascript is faster via AppletContext then via Live Connect
+    private void sendMessageViaContext(String url) {
+        try {
+            _context.showDocument(new URL(url));
+        } catch (MalformedURLException me) {
+            System.out.println(me);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
-    public boolean addEventListener(String id, JSObject eventListener) {
-
-        //System.out.println("addEventListener");
+    public boolean addEventListener(String id) {
         if (id.equals("midimessage")) {
-            _midiEventListener = eventListener;
+            if (_transmitter == null) {
+                try {
+                    _transmitter = _sequencer.getTransmitter();
+                } catch (MidiUnavailableException e) {
+                    System.out.println("Sequencer could not open a transmitter " + e);
+                    return false;
+                }
+            }
+            _transmitter.setReceiver(this);
             return true;
         } else if (id.equals("metamessage")) {
             if (!_hasMetaEventListener) {
                 _hasMetaEventListener = _sequencer.addMetaEventListener(this);
             }
-            _metaEventListener = eventListener;
             return true;
         }
         return false;
     }
 
     public Sequence loadBase64String(String data) {
-        System.out.println("load:" + data);
         _sequence = null;
         byte[] decoded = Base64.decodeBase64(data);
         ByteArrayInputStream input = new ByteArrayInputStream(decoded);
@@ -95,7 +112,6 @@ public class MIDISequencer implements Receiver, MetaEventListener {
         } catch (Exception e) {
             System.out.println(e);
         }
-
         return _sequence;
     }
 
@@ -113,6 +129,12 @@ public class MIDISequencer implements Receiver, MetaEventListener {
         if (_transmitter != null) {
             _transmitter.close();
         }
+        if (_transmitter2 != null) {
+            _transmitter2.close();
+        }
+        if (_receiver != null) {
+            _receiver.close();
+        }
     }
 
     private void loadSequence(Sequence seq) {
@@ -126,47 +148,49 @@ public class MIDISequencer implements Receiver, MetaEventListener {
         } catch (InvalidMidiDataException e) {
             System.out.println(e);
         }
-
-        if (_transmitter == null) {
-            try {
-                _transmitter = _sequencer.getTransmitter();
-            } catch (MidiUnavailableException e) {
-                System.out.println("Sequencer could not open a transmitter " + e);
-            }
-            _transmitter.setReceiver(this);
-        }
     }
 
     public void send(MidiMessage message, long timeStamp) {
-        //System.out.println("MidiMessage: " + message);
-        timeStamp = timeStamp == -1 ? _sequencer.getMicrosecondPosition() : timeStamp;
+        //System.out.println("MidiMessage: " + message + " " + timeStamp);
+        timeStamp = _sequencer.getMicrosecondPosition();
         if (message instanceof ShortMessage) {
-            ShortMessage msg = (ShortMessage) message;
-            Object[] args = {new MIDIMessage(msg, timeStamp)};
-            _midiEventListener.call("listener", args);
+            ShortMessage tmp = (ShortMessage) message;
+            MIDIMessage msg = new MIDIMessage(tmp, timeStamp);
+            String jsMsg = msg.command + "," + msg.channel + "," + msg.data1 + "," + msg.data2 + "," + timeStamp + ",'" + msg.toString() + "'";
+            
+            sendMessageViaContext("javascript:midiBridge.sequencerMIDIData(" + jsMsg + ")");
         }
     }
 
     public void meta(MetaMessage meta) {
-        //System.out.println("MetaMessage: " + meta);
-        Object[] args = {meta};
-        _metaEventListener.call("listener", args);
+        StringBuilder jsMsg = new StringBuilder();
+        jsMsg.append(meta.getType());
+        jsMsg.append(",");
+        jsMsg.append(meta.getStatus());
+        
+        byte[] message = meta.getMessage();
+        for(int i = 0, maxi = message.length; i < maxi; i++){
+            jsMsg.append(",");
+            jsMsg.append(message[i]);
+        }
+        
+        sendMessageViaContext("javascript:midiBridge.sequencerMetaData(" + jsMsg.toString() + ")");
     }
 
     public Sequence getSequence() {
         return _sequence;
     }
-    
+
     public boolean setDirectOutput(MIDIDevice device) {
-        
+
         System.out.println("setDirectOutput: " + device.deviceName);
 
         if (_receiver != null) {
             _receiver.close();
         }
 
-        _receiver = device.getReceiver();   
-        if(_receiver == null){
+        _receiver = device.getReceiver();
+        if (_receiver == null) {
             return false;
         }
 
@@ -179,12 +203,12 @@ public class MIDISequencer implements Receiver, MetaEventListener {
             }
         }
         _transmitter2.setReceiver(_receiver);
-        
+
         return true;
     }
-    
-    public void removeDirectOutput(){
-        if(_transmitter2 != null){
+
+    public void removeDirectOutput() {
+        if (_transmitter2 != null) {
             _transmitter2.close();
         }
         if (_receiver != null) {
@@ -193,8 +217,8 @@ public class MIDISequencer implements Receiver, MetaEventListener {
         _transmitter2 = null;
         _receiver = null;
     }
-    
-    public boolean hasDirectOutput(){
+
+    public boolean hasDirectOutput() {
         return _receiver != null;
     }
 

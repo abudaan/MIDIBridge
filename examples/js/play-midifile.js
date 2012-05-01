@@ -116,8 +116,7 @@ window.addEventListener('load', function() {
 
             duration = args.duration;
             slider.setRange(0, duration);
-            position = info.querySelector("#time");
-            
+            position = info.querySelector("#time");            
         });
 
 

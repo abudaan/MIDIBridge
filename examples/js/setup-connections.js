@@ -62,8 +62,6 @@ window.addEventListener('load', function() {
             }
             output = midiAccess.getOutput(outputs[deviceId]);
             connectDevices();        
-        });
-           
+        });           
     });
-
 }, false);

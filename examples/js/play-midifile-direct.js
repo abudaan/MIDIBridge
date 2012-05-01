@@ -72,6 +72,7 @@ window.addEventListener('load', function() {
     slider = midiBridge.createSlider("position", 500, 8, 0, 100, 0);
     
     slider.addEventListener("changed", function(value) {
+        sequencer.pause();
         sequencer.setMicrosecondPosition(value * 1000) //value in microseconds as String!
     });
 
@@ -138,6 +139,10 @@ window.addEventListener('load', function() {
             var timeStamp = parseInt(e.timeStamp);
             slider.setPercentage(((timeStamp / 1000) >> 0) / duration, false);
             position.innerHTML = midiBridge.formatMicroseconds(timeStamp);
-        });        
+        });  
+        
+        sequencer.addEventListener("metamessage",function(e){
+            //metamessages are for instance tempo change events
+        });
     });
 }, false);

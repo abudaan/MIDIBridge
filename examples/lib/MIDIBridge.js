@@ -60,18 +60,20 @@
         NOTE_NAMES_ENHARMONIC_FLAT : "enh-flat",
         
         //rest
-        version : "0.6.1",
+        version : "0.6.2",
         noteNameModus : "sharp",
         userAgent : ""
     },
-    midiStatusCodes = [],
-    midiCommands = [],
+    filterCommands = null,//these are the command codes that get filtered; the midibridge will not pass them on to your application
+    midiCommands = [],//all existing command codes
     noteNames = {},
     javaDir = "lib",//directory of the applet, relative to the directory of the html file
     debug = false,
     onReady = null,
-    onError = null,    
-    passStatusCodes = null,//these are the status codes that the midibridge passes on to the application
+    onError = null,  
+    onSequencerMIDIData = null,
+    onSequencerMetaData = null,
+    midiInputListeners = {},
     midiBridgeJar = "midiapplet-" + midiBridge.version + ".jar",
     applet = null,
     MIDIAccess = null,
@@ -109,53 +111,30 @@
     //console.log(ua," => ",userAgent);
     
     
-    //human readable representation of status byte in MIDI data
-    midiStatusCodes[0x80] = "NOTE OFF";
-    midiStatusCodes[0x90] = "NOTE ON";
-    midiStatusCodes[0xA0] = "POLY PRESSURE";//POLYPHONIC AFTERTOUCH
-    midiStatusCodes[0xB0] = "CONTROL CHANGE";
-    midiStatusCodes[0xC0] = "PROGRAM CHANGE";
-    midiStatusCodes[0xD0] = "CHANNEL PRESSURE";//AFTERTOUCH
-    midiStatusCodes[0xE0] = "PITCH BEND";
-    midiStatusCodes[0xF0] = "SYSTEM EXCLUSIVE";
-    midiStatusCodes[241] = "MIDI TIMECODE";
-    midiStatusCodes[242] = "SONG POSITION";
-    midiStatusCodes[243] = "SONG SELECT";
-    midiStatusCodes[244] = "RESERVED 1";
-    midiStatusCodes[245] = "RESERVED 2";
-    midiStatusCodes[246] = "TUNE REQUEST";
-    midiStatusCodes[247] = "EOX";
-    midiStatusCodes[248] = "TIMING CLOCK";
-    midiStatusCodes[249] = "RESERVED 3";
-    midiStatusCodes[250] = "START";
-    midiStatusCodes[251] = "CONTINUE";
-    midiStatusCodes[252] = "STOP";
-    midiStatusCodes[254] = "ACTIVE SENSING";
-    midiStatusCodes[255] = "SYSTEM RESET";
-    
-    
-    //create status codes for all channels
-    for(var statusCode in midiStatusCodes){
-        var command = parseInt(statusCode);
-        switch(command){
-            case midiBridge.NOTE_OFF:
-            case midiBridge.NOTE_ON:
-            case midiBridge.POLY_PRESSURE: //POLYPHONIC AFTERTOUCH
-            case midiBridge.CONTROL_CHANGE:
-            case midiBridge.PROGRAM_CHANGE:
-            case midiBridge.CHANNEL_PRESSURE: //AFTERTOUCH
-            case midiBridge.PITCH_BEND:
-                midiCommands.push(command);
-                for(var channel = 0; channel < 16; channel++){
-                    midiStatusCodes[command + channel] = midiStatusCodes[statusCode];
-                }
-                break;
-            default:
-                midiCommands.push(command);
-                break;
-        }
-    }
-    
+    //human readable representation of command byte in MIDI data
+    midiCommands[128] = "NOTE OFF";
+    midiCommands[144] = "NOTE ON";
+    midiCommands[160] = "POLY PRESSURE";//POLYPHONIC AFTERTOUCH
+    midiCommands[176] = "CONTROL CHANGE";
+    midiCommands[192] = "PROGRAM CHANGE";
+    midiCommands[208] = "CHANNEL PRESSURE";//AFTERTOUCH
+    midiCommands[224] = "PITCH BEND";
+    midiCommands[240] = "SYSTEM EXCLUSIVE";
+    midiCommands[241] = "MIDI TIMECODE";
+    midiCommands[242] = "SONG POSITION";
+    midiCommands[243] = "SONG SELECT";
+    midiCommands[244] = "RESERVED 1";
+    midiCommands[245] = "RESERVED 2";
+    midiCommands[246] = "TUNE REQUEST";
+    midiCommands[247] = "EOX";
+    midiCommands[248] = "TIMING CLOCK";
+    midiCommands[249] = "RESERVED 3";
+    midiCommands[250] = "START";
+    midiCommands[251] = "CONTINUE";
+    midiCommands[252] = "STOP";
+    midiCommands[254] = "ACTIVE SENSING";
+    midiCommands[255] = "SYSTEM RESET";
+        
     
     //notenames in different modi
     noteNames = {
@@ -203,58 +182,38 @@
         } else if (args.length === 2  && typeof args[0] === "object" && typeof args[1] === "function") {
             
             var config = args[0],
-            i,maxi,j,maxj,command1,command2;
+            i,maxi,command1,command2;
             
             onReady = args[1];
             onError = config.onError;
             debug = config.debug;
             javaDir = config.javaDir || javaDir;
             
-            passStatusCodes = {};
             
-            var checkChannelEvents = function(command,commands){
-                switch(command){
-                    case midiBridge.NOTE_OFF:
-                    case midiBridge.NOTE_ON:
-                    case midiBridge.POLY_PRESSURE: //POLYPHONIC AFTERTOUCH
-                    case midiBridge.CONTROL_CHANGE:
-                    case midiBridge.PROGRAM_CHANGE:
-                    case midiBridge.CHANNEL_PRESSURE: //AFTERTOUCH
-                    case midiBridge.PITCH_BEND:
-                        for(channel = 0; channel < 16; channel++){
-                            commands[command + channel] = 1;
-                        }                            
-                        break;
-                    default:
-                        commands[command] = 1;               
-                }
-            }
-
-            if(config.filterCommands !== undefined){
-                for(i = 0, maxi = midiCommands.length; i < maxi; i++){
-                    command1 = midiCommands[i];
-                    var filterCommand = false;
-                    for(j = 0, maxj = config.filterCommands.length; j < maxj; j++){
-                        command2 = config.filterCommands[j];
+            function setCommandFilter(commands,filter){               
+                filterCommands = {};
+                
+                for(command1 in midiCommands){
+                    var filterCommand = !filter;
+                    for(i = 0, maxi = commands.length; i < maxi; i++){
+                        command2 = commands[i];
                         if(command2 == command1){
-                            filterCommand = true;
+                            filterCommand = filter;
                             break;
                         }
                     }
-                    if(!filterCommand){
-                        checkChannelEvents(command1,passStatusCodes);
-                    }
+                    filterCommands[command1] = filterCommand;
                 }
-            }else if(config.passCommands !== undefined){
-                for(i = 0, maxi = config.passCommands.length; i < maxi; i++){
-                    checkChannelEvents(config.passCommands[i],passStatusCodes);
-                }
-            }else{
-                passStatusCodes = null;
+            }
+            
+            if(config.filterCommands){
+                setCommandFilter(config.filterCommands,true);
+            }else if(config.passCommands){
+                setCommandFilter(config.passCommands,false);
             }           
 
             if(debug){
-                console.log(passStatusCodes,userAgent);
+                console.log(filterCommands,userAgent);
             }
         }
 
@@ -334,9 +293,12 @@
 
         sequencerJs = {
             addEventListener:function(eventId,callback){
-                Sequencer.addEventListener(eventId,{
-                    listener:callback
-                });
+                Sequencer.addEventListener(eventId);
+                if(eventId === "midimessage"){
+                    onSequencerMIDIData = callback;
+                }else if(eventId === "metamessage"){
+                    onSequencerMetaData = callback;
+                } 
             },
             stop:function(){
                 Sequencer.stop();
@@ -346,6 +308,9 @@
             },
             pause:function(){
                 Sequencer.pause();
+            },
+            isPlaying:function(){
+                return Sequencer.isRunning();
             },
             loadBase64String:function(data){
                 return Sequencer.loadBase64String(stripBase64Header(data));
@@ -440,17 +405,17 @@
                     }
                 },
                 addEventListener:function(eventId,callback){
-                    device.addEventListener(eventId,{
-                        listener:function(e){
-                            if(passStatusCodes && passStatusCodes[e.status] !== 1){
-                                if(debug){
-                                    console.log("MIDI message intercepted", e.status, e.channel, e.data1, e.data2);
-                                }
-                            }else{
-                                callback(e);
+                    //passing events from Java to Javascript is faster with AppletContext than with Live Connect!
+                    device.addEventListener(eventId);
+                    midiInputListeners[device.id] = function(e){
+                        if(filterCommands && filterCommands[e.command]){
+                            if(debug){
+                                console.log("MIDI message intercepted", e.command, e.channel, e.data1, e.data2);
                             }
-                        }
-                    });
+                        }else{
+                            callback(e);
+                        }                       
+                    }
                 },
                 sendMIDIMessage:function(event){
                     if(!device.getDevice().isOpen()){
@@ -523,6 +488,57 @@
         return sequencerJs;
     }
         
+    midiBridge.sequencerMIDIData = function(){
+        
+        var args = Array.prototype.slice.call(arguments);
+        
+        if(onSequencerMIDIData){
+            onSequencerMIDIData({
+                command:args[0],
+                channel:args[1],
+                data1:args[2],
+                data2:args[3],
+                timeStamp:args[4],
+                toString:function(){
+                    return args[5];
+                }
+            });
+        }
+    } 
+    
+    midiBridge.onMIDIData = function(){
+        
+        var args = Array.prototype.slice.call(arguments);
+        
+        midiInputListeners[args[0]]({
+            command:args[1],
+            channel:args[2],
+            data1:args[3],
+            data2:args[4],
+            timeStamp:args[5],
+            toString:function(){
+                return args[6];
+            }
+        });
+    }
+
+    midiBridge.sequencerMetaData = function(){
+        
+        var args = Array.prototype.slice.call(arguments);
+
+        if(onSequencerMetaData){
+            var msg = {
+                type:args[0],
+                status:args[1],
+                data:[]
+            };
+            for(var i = 2, maxi = args.length; i < maxi; i++){
+                msg.data.push(args[i])
+            }
+            onSequencerMetaData(msg);
+        }
+    }    
+        
     midiBridge.getNoteName = function(noteNumber, mode) {
         if(!mode){
             mode = midiBridge.NOTE_NAMES_SHARP;
@@ -553,8 +569,8 @@
     };
 
 
-    midiBridge.getStatus = function(code) {
-        return midiStatusCodes[code];
+    midiBridge.getCommandVerbose = function(code) {
+        return midiCommands[code];
     };
     
     midiBridge.formatMicroseconds = function(microseconds)

@@ -8,6 +8,7 @@
 
 package net.abumarkub.midi;
 
+import java.applet.AppletContext;
 import java.util.ArrayList;
 import java.util.Iterator;
 import javax.sound.midi.MidiDevice;
@@ -25,12 +26,14 @@ public class MIDIAccess {
     private ArrayList<MIDIDevice> _synths;
     private ArrayList<MIDIDevice> _sequencers;
     private ArrayList<MIDIDevice> _otherDevices;
+    private AppletContext _context;
     
     private Object [] _inputInfosArray;
     private Object [] _outputInfosArray;
     
 
-    public MIDIAccess() {
+    public MIDIAccess(AppletContext context) {
+        _context = context;
                 
         MidiDevice device;
         MidiDevice.Info[] infos = javax.sound.midi.MidiSystem.getMidiDeviceInfo();
@@ -64,19 +67,19 @@ public class MIDIAccess {
                     type = "synth";
                     available = checkDeviceAvailability(device);
                     if (available) {
-                        _synths.add(new MIDIDevice(device,_synths.size(),type));
+                        _synths.add(new MIDIDevice(device,_synths.size(),type,_context));
                     }
                 } else if (device instanceof Sequencer) {
                     type = "sequencer";
                     available = checkDeviceAvailability(device);
                     if (available) {
-                        _sequencers.add(new MIDIDevice(device,_sequencers.size(),type));
+                        _sequencers.add(new MIDIDevice(device,_sequencers.size(),type,_context));
                     }
                 } else {
                     type = "other";
                     available = checkDeviceAvailability(device);
                     if (available) {
-                        _otherDevices.add(new MIDIDevice(device,_otherDevices.size(),type));
+                        _otherDevices.add(new MIDIDevice(device,_otherDevices.size(),type,_context));
                     }
                 }
             } else if (numRecv == 0) {
@@ -85,7 +88,7 @@ public class MIDIAccess {
                 //System.out.println(device.getDeviceInfo().getName() + " " + available);
                 if (available) {
                     //System.out.println("adding input");
-                    midiDevice = new MIDIDevice(device,_inputs.size(),type); 
+                    midiDevice = new MIDIDevice(device,_inputs.size(),type,_context); 
                     _inputs.add(midiDevice);
                     _inputInfos.add(midiDevice.info);
                 }
@@ -94,7 +97,7 @@ public class MIDIAccess {
                 available = checkDeviceAvailability(device);
                 if (available) {
                     //System.out.println("adding output");
-                    midiDevice = new MIDIDevice(device,_outputs.size(),type); 
+                    midiDevice = new MIDIDevice(device,_outputs.size(),type,_context); 
                     _outputs.add(midiDevice);
                     _outputInfos.add(midiDevice.info);
                 }
